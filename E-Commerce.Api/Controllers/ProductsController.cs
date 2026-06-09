@@ -1,32 +1,25 @@
 ﻿using E_Commerce.Core.Entities;
-using E_Commerce.Infrastructure.Data;
+using E_Commerce.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace E_Commerce.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductsController : ControllerBase
+    public class ProductsController(IProductRepository productRepository) : ControllerBase
     {
-        private readonly StoreContext context;
-
-        public ProductsController(StoreContext context)
-        {
-            this.context = context;
-        }
-
+        private readonly IProductRepository productRepository = productRepository;
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts()
+        public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts(string? brand, string? type, string? sort)
         {
-            return await context.Products.ToListAsync();
+            return Ok(await productRepository.GetProductsAsync(brand, type, sort));
         }
 
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Product>> GetProductById(int id)
         {
-            var product = await context.Products.FindAsync(id);
+            var product = await productRepository.GetProductAsync(id);
 
             if (product == null)
             {
@@ -39,46 +32,66 @@ namespace E_Commerce.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<Product>> CreateProduct(Product product)
         {
-            context.Products.Add(product);
-            await context.SaveChangesAsync();
-            return Ok(product);
+            productRepository.AddProduct(product);
+
+            if (await productRepository.SaveChangesAsync())
+            {
+                return CreatedAtAction("GetProductById", new { id = product.Id }, product);
+            }
+            return BadRequest("Problem Creating product");
         }
 
         [HttpPut("{id:int}")]
         public async Task<ActionResult<Product>> UpdateProduct(int id, Product product)
         {
-            if (product.Id != id || !ProductExist(id))
+
+            if (product.Id != id)
             {
                 return BadRequest("Product cannot be update");
             }
 
+            if (!await productRepository.ProductExistsAsync(id))
+            {
+                return NotFound();
+            }
+
             //update all the product
             //Generate an UPDATE statement for this entire object even though you didn't load it from the database.
-            context.Entry(product).State = EntityState.Modified;
+            productRepository.UpdateProduct(product);
 
-            await context.SaveChangesAsync();
+            if (await productRepository.SaveChangesAsync())
+            {
+                return Ok(product);
 
-            return Ok(product);
+            }
 
+            return BadRequest("Problem when updating");
         }
 
         [HttpDelete("{id:int}")]
         public async Task<ActionResult<string>> DeleteProduct(int id)
         {
-            var product = await context.Products.FindAsync(id);
+            var product = await productRepository.GetProductAsync(id);
 
             if (product == null) return NotFound();
 
-            context.Products.Remove(product);
-            await context.SaveChangesAsync();
-
-            return $"{product.Name} deleted Successefully";
-
+            productRepository.DeleteProduct(product);
+            if (await productRepository.SaveChangesAsync())
+            {
+                return $"{product.Name} deleted Successefully";
+            }
+            return BadRequest("Could not delete this product");
         }
 
-        private bool ProductExist(int id)
+        [HttpGet("brands")]
+        public async Task<ActionResult<IReadOnlyList<string>>> GetBrands()
         {
-            return context.Products.Any(x => x.Id == id);
+            return Ok(await productRepository.GetBrandsAsync());
+        }
+        [HttpGet("types")]
+        public async Task<ActionResult<IReadOnlyList<string>>> GetTypes()
+        {
+            return Ok(await productRepository.GetTypesAsync());
         }
     }
 }

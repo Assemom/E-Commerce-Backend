@@ -1,4 +1,5 @@
 
+using E_Commerce.Core.Interfaces;
 using E_Commerce.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,7 +7,7 @@ namespace E_Commerce.Api
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,8 @@ namespace E_Commerce.Api
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("conn"));
             });
+
+            builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
             var app = builder.Build();
 
@@ -35,6 +38,21 @@ namespace E_Commerce.Api
 
 
             app.MapControllers();
+
+            try
+            {
+                using var scope = app.Services.CreateScope();
+                var services = scope.ServiceProvider;
+                var context = services.GetRequiredService<StoreContext>();
+                await context.Database.MigrateAsync();
+                await StoreContextSeed.SeedAsync(context);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                throw;
+            }
+
 
             app.Run();
         }

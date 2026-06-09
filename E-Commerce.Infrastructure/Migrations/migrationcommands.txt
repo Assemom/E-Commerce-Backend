@@ -8,5 +8,8 @@ dotnet ef database update -s API -p Infrastructure
 //for remove migration
 dotnet ef migrations remove -s E-commerce.Api -p E-Commerce.Infrastructure
 
+//drop the database
+ dotnet ef database drop -p E-Commerce.Infrastructure -s E-Commerce.Api
+
 //add .gitignore file
 dotnet new gitignore  (then add api/appsettings.json in it)
