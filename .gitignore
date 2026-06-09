@@ -480,4 +480,4 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
-E-Commerce.Api/appsetting.json
+E-Commerce.Api/appsettings.json
