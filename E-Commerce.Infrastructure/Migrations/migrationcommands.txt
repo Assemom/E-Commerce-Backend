@@ -1,0 +1,12 @@
+// for add migration specify the stertup project then the required destination 
+dotnet ef migrations add InitialCreate -s API -p Infrastructure
+
+
+// for updating the db
+dotnet ef database update -s API -p Infrastructure
+
+//for remove migration
+dotnet ef migrations remove -s E-commerce.Api -p E-Commerce.Infrastructure
+
+//add .gitignore file
+dotnet new gitignore
