@@ -52,6 +52,7 @@ namespace E_Commerce.Api.Controllers
                 return BadRequest("Product cannot be update");
             }
 
+            //update all the product
             //Generate an UPDATE statement for this entire object even though you didn't load it from the database.
             context.Entry(product).State = EntityState.Modified;
 
