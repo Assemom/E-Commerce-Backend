@@ -1,25 +1,30 @@
 ﻿using E_Commerce.Core.Entities;
 using E_Commerce.Core.Interfaces;
+using E_Commerce.Core.Specifications;
 using Microsoft.AspNetCore.Mvc;
 
 namespace E_Commerce.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductsController(IProductRepository productRepository) : ControllerBase
+    public class ProductsController(IGenericRepository<Product> repository) : ControllerBase
     {
-        private readonly IProductRepository productRepository = productRepository;
+
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts(string? brand, string? type, string? sort)
         {
-            return Ok(await productRepository.GetProductsAsync(brand, type, sort));
+            var spec = new ProductSpecification(brand, type, sort);
+
+            var products = await repository.ListAsync(spec);
+
+            return Ok(products);
         }
 
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Product>> GetProductById(int id)
         {
-            var product = await productRepository.GetProductAsync(id);
+            var product = await repository.GetByIdAsync(id);
 
             if (product == null)
             {
@@ -32,9 +37,9 @@ namespace E_Commerce.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<Product>> CreateProduct(Product product)
         {
-            productRepository.AddProduct(product);
+            repository.Add(product);
 
-            if (await productRepository.SaveChangesAsync())
+            if (await repository.SaveChangesAsync())
             {
                 return CreatedAtAction("GetProductById", new { id = product.Id }, product);
             }
@@ -50,16 +55,16 @@ namespace E_Commerce.Api.Controllers
                 return BadRequest("Product cannot be update");
             }
 
-            if (!await productRepository.ProductExistsAsync(id))
+            if (!await repository.ExistsAsync(id))
             {
                 return NotFound();
             }
 
             //update all the product
             //Generate an UPDATE statement for this entire object even though you didn't load it from the database.
-            productRepository.UpdateProduct(product);
+            repository.Update(product);
 
-            if (await productRepository.SaveChangesAsync())
+            if (await repository.SaveChangesAsync())
             {
                 return Ok(product);
 
@@ -71,12 +76,12 @@ namespace E_Commerce.Api.Controllers
         [HttpDelete("{id:int}")]
         public async Task<ActionResult<string>> DeleteProduct(int id)
         {
-            var product = await productRepository.GetProductAsync(id);
+            var product = await repository.GetByIdAsync(id);
 
             if (product == null) return NotFound();
 
-            productRepository.DeleteProduct(product);
-            if (await productRepository.SaveChangesAsync())
+            repository.Delete(product);
+            if (await repository.SaveChangesAsync())
             {
                 return $"{product.Name} deleted Successefully";
             }
@@ -86,12 +91,14 @@ namespace E_Commerce.Api.Controllers
         [HttpGet("brands")]
         public async Task<ActionResult<IReadOnlyList<string>>> GetBrands()
         {
-            return Ok(await productRepository.GetBrandsAsync());
+            var spec = new BrandListSpecification();
+            return Ok(await repository.ListAsync(spec));
         }
         [HttpGet("types")]
         public async Task<ActionResult<IReadOnlyList<string>>> GetTypes()
         {
-            return Ok(await productRepository.GetTypesAsync());
+            var spec = new TypeListSpecification();
+            return Ok(await repository.ListAsync(spec));
         }
     }
 }
