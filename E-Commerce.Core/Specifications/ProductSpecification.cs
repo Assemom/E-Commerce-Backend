@@ -4,12 +4,15 @@ namespace E_Commerce.Core.Specifications
 {
     public class ProductSpecification : BaseSpecification<Product>
     {
-        public ProductSpecification(string? brand, string? type, string? sort) : base(x =>
-            (string.IsNullOrWhiteSpace(brand) || x.Brand == brand)
-            && (string.IsNullOrWhiteSpace(type) || x.Type == type)
+        public ProductSpecification(ProductSpecParams _params) : base(x =>
+            (string.IsNullOrEmpty(_params.Search) || x.Name.ToLower().Contains(_params.Search)) &&
+            (_params.Brands.Count == 0 || _params.Brands.Contains(x.Brand))
+            && (_params.Types.Count == 0 || _params.Types.Contains(x.Type))
         )
         {
-            switch (sort)
+            ApplyedPaging(_params._pageSize * (_params.PageIndex - 1), _params.PageSize);
+
+            switch (_params.Sort)
             {
                 case "PriceAsc":
                     AddOrderBy(x => x.Price);

@@ -26,6 +26,10 @@ namespace E_Commerce.Infrastructure.Data
                 query = query.Distinct();
             }
 
+            if (spec.IsPagedEnabled)
+            {
+                query = query.Skip(spec.Skip).Take(spec.Take);
+            }
 
             return query;
         }
@@ -57,6 +61,10 @@ namespace E_Commerce.Infrastructure.Data
                 selectQuery = selectQuery?.Distinct();
             }
 
+            if (spec.IsPagedEnabled)
+            {
+                selectQuery = selectQuery?.Skip(spec.Skip).Take(spec.Take);
+            }
 
             return selectQuery ?? query.Cast<TResult>();
         }

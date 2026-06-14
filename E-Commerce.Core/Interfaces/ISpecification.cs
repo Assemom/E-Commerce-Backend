@@ -9,6 +9,12 @@ namespace E_Commerce.Core.Interfaces
         Expression<Func<T, object>>? OrderByDescending { get; }
 
         bool IsDistinct { get; }
+
+        int Take { get; }
+        int Skip { get; }
+        bool IsPagedEnabled { get; }
+
+        IQueryable<T> AppliedCriteria(IQueryable<T> query);
     }
 
     public interface ISpecifacation<T, TResult> : ISpecification<T>

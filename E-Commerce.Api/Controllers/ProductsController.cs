@@ -7,18 +7,16 @@ namespace E_Commerce.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductsController(IGenericRepository<Product> repository) : ControllerBase
+    public class ProductsController(IGenericRepository<Product> repository) : BaseApiController
     {
 
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts(string? brand, string? type, string? sort)
+        public async Task<ActionResult<IEnumerable<Product>>> GetAllProducts([FromQuery] ProductSpecParams specParams)
         {
-            var spec = new ProductSpecification(brand, type, sort);
+            var spec = new ProductSpecification(specParams);
 
-            var products = await repository.ListAsync(spec);
-
-            return Ok(products);
+            return await CreatePageResult(repository, spec, specParams.PageIndex, specParams.PageSize);
         }
 
         [HttpGet("{id:int}")]
