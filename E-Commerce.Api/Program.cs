@@ -1,4 +1,5 @@
 
+using E_Commerce.Api.MiddleWare;
 using E_Commerce.Core.Interfaces;
 using E_Commerce.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -25,18 +26,24 @@ namespace E_Commerce.Api
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
+            builder.Services.AddCors();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.MapOpenApi();
-            }
+            //if (app.Environment.IsDevelopment())
+            //{
+            //    app.MapOpenApi();
+            //}
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
-            app.UseAuthorization();
+            //app.UseAuthorization();
 
+
+            app.UseMiddleware<ExceptionMiddleWare>();
+
+            app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200", "https://localhost:4200"));
 
             app.MapControllers();
 
